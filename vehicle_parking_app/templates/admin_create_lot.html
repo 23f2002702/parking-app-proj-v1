@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Create Parking Lot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+    <h1>Create Parking Lot</h1>
+    <form action="{{ url_for('create_lot') }}" method="POST" class="form-container">
+        <label for="name">Lot Name:</label>
+        <input type="text" name="name" id="name" required />
+
+        <label for="address">Address:</label>
+        <input type="text" name="address" id="address" required />
+
+        <label for="pin_code">Pin Code:</label>
+        <input type="text" name="pin_code" id="pin_code" required pattern="\d{6}" title="6 digit pin code" />
+
+        <label for="price_per_hour">Price per Hour:</label>
+        <input type="number" step="1.00" name="price_per_hour" id="price_per_hour" required />
+
+        <label for="max_spots">Maximum Spots:</label>
+        <input type="number" name="max_spots" id="max_spots" min="1" required />
+
+        <button type="submit">Create Lot</button>
+    </form>
+
+    <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+</body>
+</html>

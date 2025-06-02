@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>All Registered Users</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+    <h1>Registered Users</h1>
+
+    <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a> |
+    <a href="{{ url_for('logout') }}">Logout</a>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Spot ID</th>
+                <th>Parking Start</th>
+                <th>Parking End</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user['username'] }}</td>
+                <td>{{ user['full_name'] }}</td>
+                <td>{{ user['spot_id'] if user['spot_id'] else 'N/A' }}</td>
+                <td>{{ user['parking_timestamp'] if user['parking_timestamp'] else 'N/A' }}</td>
+                <td>{{ user['leaving_timestamp'] if user['leaving_timestamp'] else 'N/A' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5">No users found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
