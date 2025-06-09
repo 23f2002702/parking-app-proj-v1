@@ -7,7 +7,75 @@
 <body>
 <div class="container">
     <h2>Welcome, {{ username }}</h2>
-    <p>This is your dashboard.</p>
+    
+    {% if reservation %}
+        <h3>🔒 Active Reservation</h3>
+        <p><strong>Lot:</strong> {{ reservation['lot_name'] }}</p>
+        <p><strong>Spot ID:</strong> {{ reservation['spot_id'] }}</p>
+        <p><strong>Start Time:</strong> {{ reservation['parking_timestamp'] or "Not started yet" }}</p>
+        <div style="margin-top: 20px;">
+            {% if reservation['parking_timestamp'] %}
+                <a href="/user/release"><button>Release Spot</button></a>
+            {% else %}
+                <a href="/user/occupy"><button>Mark as Occupied</button></a>
+            {% endif %}
+        </div>
+    {% else %}
+        <h3>🚗 Book a Spot</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Lot Name</th>
+                    <th>Available Spots</th>
+                    <th>Price/hour</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lot in lots %}
+                <tr>
+                    <td>{{ lot['name'] }}</td>
+                    <td>{{ spot_availability[lot['id']] }}</td>
+                    <td>₹{{ lot['price_per_hour'] }}</td>
+                    <td>
+                        {% if spot_availability[lot['id']] > 0 %}
+                        <a href="{{ url_for('reserve_spot', lot_id=lot['id']) }}"><button>Book</button></a>
+                        {% else %}
+                        <span>Unavailable</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <h3 style="margin-top: 40px;">📜 Reservation History</h3>
+    {% if history %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Lot Name</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Cost</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in history %}
+            <tr>
+                <td>{{ row['lot_name'] }}</td>
+                <td>{{ row['parking_timestamp'] }}</td>
+                <td>{{ row['leaving_timestamp'] }}</td>
+                <td>₹{{ row['parking_cost'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No reservation history yet.</p>
+    {% endif %}
+
     <a href="/logout"><button>Logout</button></a>
 </div>
 </body>
