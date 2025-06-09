@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session
 import sqlite3
 from datetime import datetime
+import math
+from dateutil import parser  
 
 app = Flask(__name__)
 app.secret_key = 'secret123'  # for session handling
@@ -83,12 +85,163 @@ def admin_dashboard():
     conn.close()
     return render_template('admin_dashboard.html', lots=lots, spot_counts=spot_counts)
 
-# User Dashboard
 @app.route('/user/dashboard')
 def user_dashboard():
     if session.get('role') != 'user':
         return redirect('/login')
-    return render_template('user_dashboard.html', username=session.get('username'))
+
+    user_id = session.get('user_id')
+    conn = get_db_connection()
+
+    # Get user's current active reservation (if any)
+    reservation = conn.execute('''
+        SELECT R.*, P.lot_id, L.name AS lot_name
+        FROM Reservation R
+        JOIN Parking_spot P ON R.spot_id = P.id
+        JOIN Parking_lot L ON P.lot_id = L.id
+        WHERE R.user_id = ? AND R.leaving_timestamp IS NULL
+    ''', (user_id,)).fetchone()
+
+    # All lots and spot availability
+    lots = conn.execute('SELECT * FROM parking_lot').fetchall()
+    spot_availability = {}
+    for lot in lots:
+        available = conn.execute('''
+            SELECT COUNT(*) FROM parking_spot
+            WHERE lot_id = ? AND status = 'A'
+        ''', (lot['id'],)).fetchone()[0]
+        spot_availability[lot['id']] = available
+
+    # User's past reservation history 
+    history = conn.execute('''
+        SELECT R.*, P.lot_id, L.name AS lot_name
+        FROM Reservation R
+        JOIN Parking_spot P ON R.spot_id = P.id
+        JOIN Parking_lot L ON P.lot_id = L.id
+        WHERE R.user_id = ? AND R.leaving_timestamp IS NOT NULL
+        ORDER BY R.parking_timestamp DESC
+    ''', (user_id,)).fetchall()
+
+    conn.close()
+    return render_template('user_dashboard.html',
+                           username=session.get('username'),
+                           lots=lots,
+                           spot_availability=spot_availability,
+                           reservation=reservation,
+                           history=history)
+
+# Reserve first available spot 
+@app.route('/user/reserve/<int:lot_id>')
+def reserve_spot(lot_id):
+    if session.get('role') != 'user':
+        return redirect('/login')
+
+    user_id = session.get('user_id')
+    now = datetime.now()
+
+    conn = get_db_connection()
+
+    # Check if user already has active reservation
+    existing = conn.execute('''
+        SELECT * FROM Reservation
+        WHERE user_id = ? AND leaving_timestamp IS NULL
+    ''', (user_id,)).fetchone()
+
+    if existing:
+        conn.close()
+        return "⚠️ You already have an active reservation."
+
+    # Find first available spot **only in the chosen lot**
+    spot = conn.execute('''
+        SELECT * FROM Parking_spot
+        WHERE status = 'A' AND lot_id = ?
+        ORDER BY id ASC
+        LIMIT 1
+    ''', (lot_id,)).fetchone()
+
+    if not spot:
+        conn.close()
+        return "🚫 No spots available in this parking lot at the moment."
+
+    # Mark spot as occupied
+    conn.execute('UPDATE Parking_spot SET status = "O" WHERE id = ?', (spot['id'],))
+
+    # Create reservation with parking_timestamp set now
+    conn.execute('''
+        INSERT INTO Reservation (spot_id, user_id, parking_timestamp)
+        VALUES (?, ?, ?)
+    ''', (spot['id'], user_id, now.strftime('%Y-%m-%d %H:%M:%S')))
+
+    conn.commit()
+    conn.close()
+    return redirect('/user/dashboard')
+
+
+# Log parking time
+@app.route('/user/occupy')
+def occupy_spot():
+    if session.get('role') != 'user':
+        return redirect('/login')
+
+    user_id = session.get('user_id')
+    now = datetime.now()
+
+    conn = get_db_connection()
+    conn.execute('''
+        UPDATE Reservation
+        SET parking_timestamp = ?
+        WHERE user_id = ? AND leaving_timestamp IS NULL
+    ''', (now, user_id))
+    conn.commit()
+    conn.close()
+    return redirect('/user/dashboard')
+
+# Release spot and calculate cost 
+@app.route('/user/release')
+def release_spot():
+    if session.get('role') != 'user':
+        return redirect('/login')
+
+    user_id = session.get('user_id')
+    now = datetime.now()
+
+    conn = get_db_connection()
+
+    # Get active reservation with price info
+    reservation = conn.execute('''
+        SELECT R.id, R.spot_id, R.parking_timestamp, L.price_per_hour
+        FROM Reservation R
+        JOIN Parking_spot P ON R.spot_id = P.id
+        JOIN Parking_lot L ON P.lot_id = L.id
+        WHERE R.user_id = ? AND R.leaving_timestamp IS NULL
+    ''', (user_id,)).fetchone()
+
+    if not reservation:
+        conn.close()
+        return "⚠️ No active reservation found."
+
+    # Parse start time from DB string
+    start = parser.parse(reservation['parking_timestamp'])
+    duration_minutes = (now - start).total_seconds() / 60  # total minutes parked
+
+    # Round up to nearest full hour
+    hours = math.ceil(duration_minutes / 60)
+    cost = hours * reservation['price_per_hour']
+
+    # Update reservation with leaving time and cost
+    conn.execute('''
+        UPDATE Reservation
+        SET leaving_timestamp = ?, parking_cost = ?
+        WHERE id = ?
+    ''', (now.strftime('%Y-%m-%d %H:%M:%S'), cost, reservation['id']))
+
+    # Free the spot
+    conn.execute('UPDATE Parking_spot SET status = "A" WHERE id = ?', (reservation['spot_id'],))
+
+    conn.commit()
+    conn.close()
+    return redirect('/user/dashboard')
+
 
 # Create Parking Lot (with Auto-creating Spots) 
 @app.route('/admin/create_lot', methods=['GET', 'POST'])
