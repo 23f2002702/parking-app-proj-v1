@@ -321,6 +321,8 @@ def delete_lot(lot_id):
     conn.close()
     return redirect('/admin/dashboard')
 
+
+
 # View All Users and Spot Info
 @app.route('/admin/users')
 def view_users():
@@ -336,6 +338,27 @@ def view_users():
     ''').fetchall()
     conn.close()
     return render_template('admin_users.html', users=users)
+
+# Admin Parking History View
+@app.route('/admin/parking_history')
+def parking_history():
+    if session.get('role') != 'admin':
+        return redirect('/login')
+
+    conn = get_db_connection()
+    records = conn.execute('''
+        SELECT R.id, U.full_name, U.username, L.name AS lot_name,
+               R.parking_timestamp, R.leaving_timestamp, R.parking_cost
+        FROM Reservation R
+        JOIN Users U ON R.user_id = U.id
+        JOIN Parking_spot P ON R.spot_id = P.id
+        JOIN Parking_lot L ON P.lot_id = L.id
+        WHERE R.leaving_timestamp IS NOT NULL
+        ORDER BY R.parking_timestamp DESC
+    ''').fetchall()
+    conn.close()
+    return render_template('admin_parking_summary.html', records=records)
+
 
 # Logout
 @app.route('/logout')
