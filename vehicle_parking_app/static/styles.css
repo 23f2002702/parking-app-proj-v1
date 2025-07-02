@@ -24,6 +24,17 @@ body {
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     width: 100%;
+    max-width: 1000px;
+    margin: 30px auto;
+    text-align: center;
+}
+/* Container for centered forms or panels */
+.container1, .form-container {
+    background-color: #fff;
+    padding: 30px 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    width: 100%;
     max-width: 400px;
     margin: 30px auto;
     text-align: center;
@@ -121,6 +132,18 @@ tbody tr:hover {
 p {
     margin-top: 15px;
     color: #666;
+}
+
+/* Fix table overflow */
+.table-wrapper {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+/* Make tables always fit inside container */
+.data-table {
+    min-width: 600px;
+    width: 100%;
 }
 
 /* Responsive adjustments */
