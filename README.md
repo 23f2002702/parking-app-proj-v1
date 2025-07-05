@@ -1,79 +1,73 @@
-Vehicle Parking App (V1)
+# Vehicle Parking App (V1)
+
 A web-based Vehicle Parking Management System designed for managing parking slots in multiple lots, allowing users to reserve and release parking spaces, and enabling admins to monitor and control the overall system.
 
-Tech Stack
-Backend: Flask (Python)
+---
 
-Frontend: HTML, CSS, Bootstrap (minimal use)
+## Tech Stack
 
-Database: SQLite
+- **Backend:** Flask (Python)
+- **Frontend:** HTML, CSS, Bootstrap (minimal use)
+- **Database:** SQLite
+- **Templating Engine:** Jinja2
 
-Templating Engine: Jinja2
+---
 
-Features
-User Side
-Register/Login
+## Features
 
-Book the first available parking spot
+### User Side
 
-Mark as "occupied" when parked
+- Register/Login  
+- Book the first available parking spot  
+- Mark as "occupied" when parked  
+- Release spot to calculate cost  
+- View personal reservation history (with time and cost)
 
-Release spot to calculate cost
+###  Admin Side
 
-View personal reservation history (with time and cost)
+- Login as admin  
+- Create, edit, delete parking lots  
+- View available/occupied spot counts  
+- View all registered users  
+- View full parking summary (history of all reservations)
 
-Admin Side
-Login as admin
+---
 
-Create, edit, delete parking lots
+## Project Milestones
 
-View available/occupied spot counts
+### Milestone 1: Database Models & Schema
+- Designed and created `Users`, `Parking_lot`, `Parking_spot`, and `Reservation` tables using SQLite.
+- Setup script to initialize the database (`setup_db.py`).
 
-View all registered users
+### Milestone 2: User & Admin Authentication
+- Built registration and login system for users.
+- Added admin login via pre-created account.
+- Session-based authentication using Flask.
 
-View full parking summary (history of all reservations)
+### Milestone 3: Parking Lot & Spot Management
+- Admin can create new parking lots with configurable price and max spots.
+- Spot status auto-handled (`Available` / `Occupied`).
+- Admin dashboard shows spot availability per lot.
 
-Project Milestones
-Milestone 1: Database Models & Schema
-Designed and created Users, Parking_lot, Parking_spot, and Reservation tables using SQLite.
+### Milestone 4: Booking and Releasing Parking Spots
+- Users can book the first available spot in any lot.
+- "Occupy" action sets `parking_timestamp`.
+- "Release" action sets `leaving_timestamp` and updates spot status.
 
-Setup script to initialize the database (setup_db.py).
+### Milestone 5: Reservation History and Summary
+- Users can view their own booking history (including lot name, time, cost).
+- Admin can view **all users’** complete parking summaries.
 
-Milestone 2: User & Admin Authentication
-Built registration and login system for users.
+### Milestone 6: Slot Time Calculation and Cost
+- Total parking duration is calculated using timestamps.
+- Cost = `ceil(duration in hours) × price_per_hour` is computed and stored.
+- Cost shown in both user and admin views.
 
-Added admin login via pre-created account.
+---
 
-Session-based authentication using Flask.
+## Project Structure
 
-Milestone 3: Parking Lot & Spot Management
-Admin can create new parking lots with configurable price and max spots.
-
-Spot status auto-handled (Available/Occupied).
-
-Admin dashboard shows spot availability per lot.
-
-Milestone 4: Booking and Releasing Parking Spots
-Users can book the first available spot in any lot.
-
-"Occupy" action sets parking_timestamp.
-
-"Release" action sets leaving_timestamp and updates spot status.
-
-Milestone 5: Reservation History and Summary
-Users can view their own booking history (including lot name, time, cost).
-
-Admin can view all users’ complete parking summaries.
-
-Milestone 6: Slot Time Calculation and Cost
-Total parking duration is calculated using timestamps.
-
-Cost = ceil(duration in hours) × price_per_hour is computed and stored.
-
-Cost shown in both user and admin views.
-
-
-Project Structure
+```
 ├── app.py                  # Main Flask app
 ├── setup_db.py             # Initializes DB schema
 ├── templates/
@@ -89,3 +83,8 @@ Project Structure
 │   └── styles.css
 ├── database/
 │   └── parking.db
+```
+
+---
+
+
