@@ -68,6 +68,7 @@ A web-based Vehicle Parking Management System designed for managing parking slot
 ## Project Structure
 
 ```
+vehicle_parking_app
 ├── app.py                  # Main Flask app
 ├── setup_db.py             # Initializes DB schema
 ├── templates/
