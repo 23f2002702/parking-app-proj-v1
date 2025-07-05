@@ -1,0 +1,43 @@
+<!-- templates/admin_parking_summary.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Parking Records</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<div class="container">
+    <h2>📋 Parking Summary (All Users)</h2>
+    {% if records %}
+    <div class="table-wrapper">
+    <table class="data-table">
+
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Lot</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Cost</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in records %}
+            <tr>
+                <td>{{ row['full_name'] }} ({{ row['username'] }})</td>
+                <td>{{ row['lot_name'] }}</td>
+                <td>{{ row['parking_timestamp'] }}</td>
+                <td>{{ row['leaving_timestamp'] }}</td>
+                <td>₹{{ row['parking_cost'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p>No parking records found.</p>
+    {% endif %}
+    <a href="/admin/dashboard"><button>⬅ Back to Dashboard</button></a>
+</div>
+</body>
+</html>
